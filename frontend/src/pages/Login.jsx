@@ -90,7 +90,7 @@ export default function Login() {
                         <Button
                             className="w-full"
                             variant="outline"
-                            onClick={() => window.location.href = 'http://localhost:5000/api/auth/google'}
+                            onClick={() => window.location.href = 'https://techbazaar-backend-webservice.onrender.com/api/auth/google'}
                         >
                             Continue with Google
                         </Button>
