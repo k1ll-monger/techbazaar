@@ -17,7 +17,7 @@ const app = express();
 
 app.use(express.json())
 app.use(cors({
-    origin: ['http://localhost:5173', 'https://techbazaar-kappa.vercel.app/x'],
+    origin: ['http://localhost:5173', 'https://techbazaar-kappa.vercel.app'],
     credentials: true
 }))
 
