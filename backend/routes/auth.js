@@ -90,9 +90,9 @@ router.get('/me', (req, res) => {
 //login with google
 router.get('/google' , passport.authenticate('google' , {scope : ['profile', 'email']}))
 
-router.get('/google/callback' , passport.authenticate('google' , { failureRedirect : 'http://localhost:5173/login '}) , 
+router.get('/google/callback' , passport.authenticate('google' , { failureRedirect : 'https://techbazaar-kappa.vercel.app/login '}) , 
         (req,res) => {
-            res.redirect('http://localhost:5173/')
+            res.redirect('https://techbazaar-kappa.vercel.app/')
         })
 
 export default router;
