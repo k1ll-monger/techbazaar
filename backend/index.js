@@ -11,9 +11,14 @@ import adminRoutes from './routes/admin.js';
 
 import passport from './passport.js';
 
+import connectPgSimple from 'connect-pg-simple';
+import db from './db.js';
+
 dotenv.config()
 
+
 const app = express();
+const PgSession = connectPgSimple(session);
 
 app.use(express.json())
 app.use(cors({
@@ -28,6 +33,10 @@ app.use(cors({
 // saveUninitialized: false — don't create a session until user logs in
 // cookie.secure: false — set to true in production when you have HTTPS
 app.use(session({
+    store: new PgSession({
+        pool: db,
+        tableName: 'session'
+    }),
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
@@ -36,7 +45,7 @@ app.use(session({
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 1000 * 60 * 60 * 24 * 7
     }
-}))
+})) 
 
 //passport middleware
 app.use(passport.initialize()); // Passport needs to set itself up on that request. 
