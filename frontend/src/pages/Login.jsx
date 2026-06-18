@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/sonner';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -21,7 +22,7 @@ export default function Login() {
             const response = await api.post('/auth/login', { email, password });
             setUser(response.data.user);
             toast.success("Login successful!", {
-                description: "Welcome back, " + user.name + "!"
+                description: "Welcome back, " + response.data.user.name + "!"
             });
             navigate('/');
             
