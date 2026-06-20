@@ -6,7 +6,7 @@ import api from '../api';
 
 export default function Header() {
     const navigate = useNavigate();
-    const {user, setUser} = useContext(UserContext);
+    const {user, setUser, loading} = useContext(UserContext);
     
     async function handleLogout() {
         try{
@@ -20,7 +20,6 @@ export default function Header() {
     }
 
     return (
-        /* Updated header classes for the blurred glass effect */
         <header className="border-b px-6 py-3 flex items-center justify-between sticky top-0 bg-background/2 backdrop-blur-sm z-50">
             <a href="/" className="font-semibold text-lg">TechBazaar</a>
             
@@ -34,11 +33,16 @@ export default function Header() {
             />
 
             <div className="flex items-center gap-3">
-                {user ? (
+                {loading ? (
+                    <div className="flex items-center gap-2 animate-pulse">
+                        <div className="w-8 h-8 rounded-full bg-zinc-700"/>
+                        <div className="w-20 h-4 rounded bg-zinc-700"/>
+                    </div>
+                ) : user ? (
                     <>
                         <a href={`/user/${user.id}`} className="flex items-center gap-2">
                             <img
-                                src={user.profile_image_url || `https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/3fc8ce6d-763c-4fd7-82e1-d7ad0121a3f8/dj3zqus-61f1a004-39a7-4ce4-b72c-7ad03715e16c.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiIvZi8zZmM4Y2U2ZC03NjNjLTRmZDctODJlMS1kN2FkMDEyMWEzZjgvZGozenF1cy02MWYxYTAwNC0zOWE3LTRjZTQtYjcyYy03YWQwMzcxNWUxNmMuanBnIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.TctEYihfNc12pDXgXOc2OlQ3t3RAKeFXxZ9I3VSdr7c`}
+                                src={user.profile_image_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`}
                                 alt={user.name}
                                 className="w-8 h-8 rounded-full object-cover"
                             />
@@ -51,8 +55,7 @@ export default function Header() {
                         <a href="/login" className="text-sm">Login</a>
                         <a href="/register" className="text-sm">Register</a>
                     </>
-                )
-                }
+                )}
             </div>
         </header>
     )
