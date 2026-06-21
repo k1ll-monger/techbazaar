@@ -6,6 +6,21 @@ A full-stack tech marketplace where users can buy and sell tech products — bui
 
 ---
 
+
+### Try it out
+
+The site is pre-seeded with demo data so you can explore it immediately:
+
+| Role | Email | Password |
+|---|---|---|
+| Admin (dashboard access) | `demo.admin@techbazaar.com` | `password123` |
+| Regular user | `arjun.mehta@demo.com` | `password123` |
+
+Or register your own account and try the full flow, including Google OAuth and a real Razorpay test-mode checkout.
+
+---
+
+
 ## Features
 
 - **Authentication** — email/password (bcrypt-hashed) and Google OAuth via Passport.js, with persistent sessions stored in PostgreSQL
