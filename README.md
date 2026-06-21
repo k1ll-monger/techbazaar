@@ -3,7 +3,6 @@
 A full-stack tech marketplace where users can buy and sell tech products — built from scratch to learn how a React frontend, an Express/Node backend, and a PostgreSQL database actually connect and work together in production.
 
 **Live site:** https://techbazaar-kappa.vercel.app/
-**Backend repo / API:** https://github.com/k1ll-monger/techbazaar
 
 ---
 
