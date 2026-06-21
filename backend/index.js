@@ -36,7 +36,8 @@ app.use(cors({
 app.use(session({
     store: new PgSession({
         pool: db,
-        tableName: 'session'
+        tableName: 'session',
+        pruneSessionInterval: 60 * 15 // cleanup expired sessions every 15 minutes
     }),
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -46,7 +47,7 @@ app.use(session({
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 1000 * 60 * 60 * 24 * 7
     }
-})) 
+}))
 
 //passport middleware
 app.use(passport.initialize()); // Passport needs to set itself up on that request. 
