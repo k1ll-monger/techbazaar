@@ -27,6 +27,10 @@ app.use(cors({
     credentials: true
 }))
 
+// Fast Health Check Endpoint (Placed before Session middleware for maximum speed)
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
 
 // Session middleware — keeps users logged in between requests
 // secret: signs the cookie so it can't be tampered with
