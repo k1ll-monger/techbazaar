@@ -3,9 +3,23 @@
 A full-stack tech marketplace where users can buy and sell tech products — built from scratch to learn how a React frontend, an Express/Node backend, and a PostgreSQL database actually connect and work together in production.
 
 **Live site:** https://techbazaar-kappa.vercel.app/
-**Backend repo / API:** https://github.com/k1ll-monger/techbazaar
 
 ---
+
+
+### Try it out
+
+The site is pre-seeded with demo data so you can explore it immediately:
+
+| Role | Email | Password |
+|---|---|---|
+| Admin (dashboard access) | `demo.admin@techbazaar.com` | `password123` |
+| Regular user | `arjun.mehta@demo.com` | `password123` |
+
+Or register your own account and try the full flow, including Google OAuth and a real Razorpay test-mode checkout.
+
+---
+
 
 ## Features
 
