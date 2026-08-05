@@ -1,11 +1,10 @@
 # TechBazaar
 
-A full-stack tech marketplace where users can buy and sell tech products — built from scratch to learn how a React frontend, an Express/Node backend, and a PostgreSQL database actually connect and work together in production.
+A full-stack tech marketplace where users can buy and sell tech products — built from scratch to learn how a React frontend, an Express/Node backend, Upstash Redis cache, PostgreSQL database, and a custom **Model Context Protocol (MCP)** server work together in production.
 
 **Live site:** https://techbazaar-kappa.vercel.app/
 
 ---
-
 
 ### Try it out
 
@@ -20,18 +19,19 @@ Or register your own account and try the full flow, including Google OAuth and a
 
 ---
 
-
 ## Features
 
-- **Authentication** — email/password (bcrypt-hashed) and Google OAuth via Passport.js, with persistent sessions stored in PostgreSQL
-- **Product listings** — create, edit, delete, and browse listings with tags, images, price, and status
-- **Search & filters** — keyword search plus price-range and tag filtering
-- **Recommendations** — tag-based "related products" engine implemented directly in SQL
-- **Ratings & reviews** — for both products and individual sellers/buyers
-- **User profiles** — public profile pages with stats (items sold/bought), average rating, listings, and reviews
-- **Payments** — real checkout flow using Razorpay (test mode), with server-side order creation and HMAC signature verification before marking a product as sold
-- **Admin dashboard** — top sellers, top buyers, and most popular tags, computed with SQL aggregates
-- **Protected routes** — client-side route guarding tied to live session state
+- **Model Context Protocol (MCP) Integration** — Exposes TechBazaar's product inventory to external LLMs (e.g. Claude Desktop) in natural language using `@modelcontextprotocol/sdk` and `Zod`.
+- **Cache-Aside Layer (Upstash Redis)** — High-performance Redis caching layer for product catalog searches and item details (`⚡ [Cache Hit]` / `🐢 [Cache Miss]`).
+- **Authentication** — email/password (bcrypt-hashed) and Google OAuth via Passport.js, with persistent sessions stored in PostgreSQL.
+- **Product listings** — create, edit, delete, and browse listings with tags, images, price, and status.
+- **Search & filters** — keyword search plus price-range and tag filtering.
+- **Recommendations** — tag-based "related products" engine implemented directly in SQL.
+- **Ratings & reviews** — for both products and individual sellers/buyers.
+- **User profiles** — public profile pages with stats (items sold/bought), average rating, listings, and reviews.
+- **Payments** — real checkout flow using Razorpay (test mode), with server-side order creation and HMAC signature verification before marking a product as sold.
+- **Admin dashboard** — top sellers, top buyers, and most popular tags, computed with SQL aggregates.
+- **Protected routes** — client-side route guarding tied to live session state.
 
 ---
 
@@ -45,8 +45,11 @@ Or register your own account and try the full flow, including Google OAuth and a
 - Axios
 - Sonner (toasts)
 
-**Backend**
+**Backend & MCP Server**
 - Node.js + Express
+- `@modelcontextprotocol/sdk` (Model Context Protocol)
+- Upstash Redis (`@upstash/redis` - Cache-Aside layer)
+- Zod (MCP input schema validation)
 - PostgreSQL (`pg`)
 - Passport.js (Local + Google OAuth20 strategies)
 - express-session + connect-pg-simple (DB-backed sessions)
@@ -61,50 +64,98 @@ Or register your own account and try the full flow, including Google OAuth and a
 
 ## Architecture
 
-The frontend and backend are fully decoupled — React talks to Express purely over a JSON REST API (no server-rendered views). Sessions are cookie-based and persisted in Postgres (instead of memory) so login state survives backend restarts/cold starts on Render's free tier.
+The frontend, backend, and MCP server layer are decoupled:
 
 ```
-React (Vercel)  --->  Express REST API (Render)  --->  PostgreSQL (Render)
-                          |
-                          ├── Passport.js (Local + Google OAuth)
-                          └── Razorpay (order creation + signature verification)
+[Claude Desktop / LLMs] ---> [MCP Server (Stdio/SSE)]
+                                   |
+React (Vercel)  --->  Express REST API (Render)
+                           |
+               ┌───────────┴───────────┐
+               ▼                       ▼
+      Upstash Redis Cache      PostgreSQL Database
+     (Cache-Aside Layer)        (Normalized 9 Tables)
 ```
-
-### Database schema
-
-9 tables: `users`, `products`, `transactions`, `product_ratings`, `user_ratings`, `product_comments`, `user_comments`, `tags`, `product_tags` — with foreign keys, composite unique constraints (e.g. one rating per user per product), and a `product_tags` join table for the many-to-many tag relationship that powers the recommendation engine.
 
 ---
 
-## Running locally
+## Running Locally
 
-**Backend**
+### 1. Backend & MCP Setup
+
 ```bash
 cd backend
 npm install
-# create a .env with DATABASE_URL, SESSION_SECRET, GOOGLE_CLIENT_ID,
-# GOOGLE_CLIENT_SECRET, RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, PORT
+```
+
+Create a `backend/.env` file with the required environment variables:
+```env
+PORT=5000
+DB_URL=postgresql://username:password@localhost:5432/postgres
+SESSION_SECRET=somereallylongrandomstring
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+RAZORPAY_KEY_ID=your_razorpay_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+UPSTASH_REDIS_REST_URL=https://your-instance.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your_upstash_redis_token
+```
+
+Run `backend/database/schema.sql` against your PostgreSQL instance before starting the server.
+
+Start the main REST server:
+```bash
 node index.js
 ```
 
-**Frontend**
+---
+
+### 2. Testing the Model Context Protocol (MCP) Server
+
+You can run and test the custom MCP Server locally using either the **MCP Inspector** or **Claude Desktop**.
+
+#### Option A: Quick Test via MCP Inspector (Web UI)
+Run the inspector in the `backend/` directory:
+```bash
+npx @modelcontextprotocol/inspector node mcp/mcpServer.js
+```
+Open `http://localhost:5173` in your browser to interactively execute `search_inventory` and `get_product_details` tools!
+
+#### Option B: Testing inside Claude Desktop
+Add the server entry to your `claude_desktop_config.json`:
+
+* **Windows**: `%APPDATA%\Claude\claude_desktop_config.json` *(or `%LOCALAPPDATA%\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Roaming\Claude\claude_desktop_config.json` if installed via Microsoft Store)*
+* **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "techbazaar": {
+      "command": "C:/Program Files/nodejs/node.exe",
+      "args": [
+        "C:/path/to/techbazaar/backend/mcp/mcpServer.js"
+      ],
+      "cwd": "C:/path/to/techbazaar/backend"
+    }
+  }
+}
+```
+
+Restart Claude Desktop and ask in natural language:
+> *"Search TechBazaar inventory for laptops under 60000."*
+
+*For complete step-by-step setup guides, refer to:*
+* [HOW_TO_TEST_MCP.md]
+---
+
+### 3. Frontend Setup
+
 ```bash
 cd frontend
 npm install
 # create a .env with VITE_RAZORPAY_KEY_ID
 npm run dev
 ```
-
-Run `backend/db/schema.sql` against your PostgreSQL instance before starting the backend.
-
----
-
-## What I'd improve next
-
-- JWT-based auth as an alternative to sessions for a fully stateless API
-- Image upload (currently takes an image URL rather than a file upload)
-- Pagination on product listings and search results
-- A real collaborative-filtering recommendation model instead of tag-based similarity
 
 ---
 
